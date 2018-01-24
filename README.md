@@ -8,6 +8,7 @@
 
 ## 目录
 
-- [《前端工程化体系设计和实践》](./前端工程化体系设计和实践.md)
-- [《第三方 javascipt 编程》](./第三方javascript编程.md)
+- [《前端工程化体系设计和实践》](./book/前端工程化体系设计和实践.md)
+- [《第三方 javascipt 编程》](./book/第三方javascript编程.md)
+- [《图解 http 》](./book/图解http.md)
 
