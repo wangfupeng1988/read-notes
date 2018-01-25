@@ -208,6 +208,8 @@ server 端返回 http 请求时，这些信息将被客户端接收。
 
 是本次 http 请求中 server 端设置的 cookie 信息。除了 cookie 内容本身之外，还有`expires` `patch` `domain` `Secure`（仅用于 https） `HttpOnly`（JS 不能访问）这些信息。
 
+如本次请求是申请登录，如果登录成功的话，server 端肯定要使用`Set-Cookie`在 cookie 中增加`sessionid=xxxx`，并且使用`HttpOnly`和`expires`。
+
 注意，**设置`domain`可能会造成主域名的 cookie 污染**。如果指定`domain=example.com`时，`sub.example.com`的页面也会有效。
 
 ### 实体首部字段
@@ -234,12 +236,14 @@ request 和 response 中，实体部分所使用的首部字段。
 
 ## https
 
+http 请求是明文传输，因此内容被窃听是分分钟的事，因此要谨慎使用那些免费的 wifi 和 vpn 等。解决方式就是使用 https 。https 传输的数据是经过加密保护的，没有正式将无法被阅读，这也给 debug 时候抓包带来了一定成本。
+
+**`HTTP + 加密 + 认证 + 完整性保护 = HTTPS`**
+
+日常工作中，https 的配置和运维都由 server 端专门的运维人员来做，因此不再详细展开，先明白原理即可。
 
 ----
 
 ## 扩展 & 遗留问题
 
 - [MIME 类型列表](http://www.w3school.com.cn/media/media_mimeref.asp)
-
-
-
