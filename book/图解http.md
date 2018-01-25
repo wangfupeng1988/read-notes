@@ -119,17 +119,116 @@ PS：报文内容中，头部内容和主体内容是通过 **空行（CR+LF）*
 
 分类：
 
-- 通用首部字段
+- 通用首部字段（即请求和相应都会用到）
 - 请求首部字段
 - 响应首部字段
 - 实体首部字段
 
+下面按照分类介绍一些常用的字段，不常用的略过。
 
+### 通用首部字段（即请求和相应都会用到）
 
+- **`Cache-Control` 缓存控制**
 
+字段值非常多。工作中一个例子，加载 CDN 一个 JS 的时候，request 时候`Cache-Control:no-cache`，response 时候`Cache-Control:max-age=3600`（资源缓存周期是 1h）
 
-**重点：cookie UA **
+- **`Connection`**
 
+一般用于管理持久连接，request 和 response 都是`Connection: keep-alive`
+
+- **`Date` 时间**
+
+即 request 和 response 的时间。记得很早之前有人问到，像那种定时秒杀抢购这种场景，肯定需要用服务器端时间，**那么客户端如何以最小的代价获取服务器端时间？** 答案就是用这里的`Date`字段，如果再弄一个 API 专门返回时间，那就慢很多了。
+
+### 请求首部字段
+
+客户端发出 http 请求时，这些信息将被 server 端接收。
+
+- **`Accept` 可接收类型**
+
+客户端接收的媒体类型，如加载 html 时`Accept: text/html,application/xhtml+xml,application/xml`，加载图片时`Accept: image/webp,image/apng,image/*,*/*;q=0.8`，无要求就直接`Accept:*/*`。
+
+上面的这些可选值，如`text/html` `image/webp` 都是标准的 MIME 类型，全部类型参考 [这里](http://www.w3school.com.cn/media/media_mimeref.asp) 或者网上搜索“MIME 类型”。
+
+- **`Accept-Encoding`**
+
+如`Accept-Encoding: gzip, deflate, br`，其中`gzip`是常用的压缩格式，表明客户端支持`gzip`压缩。`gzip`压缩能记得缩减资源大小，以 JS 为例，可压缩至原大小的 1/3 左右。
+
+- **`Accept-Language` 语言**
+
+如`Accept-Language:zh-CN,zh;q=0.9,en;q=0.8,und;q=0.7`，优先中文、英文次之，在多语言系统中可用。
+
+- **`Host` 域**
+
+如`Host: m.baidu.com`，包括域和端口号，不包括协议。
+
+- **`If-Modified-Since`**
+
+`If-Modified-Since: xxx`即要求资源必须是`xxx`时间之后修改过的，返回`200`。如果是找到资源，但是资源修改时间是`xxx`时间之前的，返回`304`（没有任何实体内容）
+
+- **`Referer` 来源**
+
+如`Referer:https://m.baidu.com/`，即该请求来自于哪里。
+
+- **`Range` 范围**
+
+如`Range: bytes:5001-10000`
+
+- **`User-Agent` UA**
+
+每次 http 请求，都将 UA 传递到 server 。注意，**UA 没有跨域限制，请求第三方 http ，也会传递 UA** 。
+
+- **`Cookie`**
+
+每次 http 请求，都将 cookie 传递给 sever 。注意，**cookie 有跨域限制，只有同源才会传递 cookie**  。
+
+### 响应首部字段
+
+server 端返回 http 请求时，这些信息将被客户端接收。
+
+- **`Age` 缓存持续时长**
+
+如`Age: 300`，即说明该资源缓存是在 300s 之前创建的。可以拿来和`Cache-Control:max-age=3600`进行对比。
+
+- **`ETag`**
+
+如`ETag: xxx`。`ETag`是服务端为每个资源分配的唯一的值，资源更新`ETag`也会更新。`ETag`并没有统一的算法，由 server 端自行控制。
+
+`ETag`会用于 request Head 中的`If-Match`字段，不过我在实际工作中尚未用过该字段。
+
+- **`Location` 重定向地址**
+
+当返回`3xx`状体码时，要配合返回重定向的地址。
+
+- **`Server` 服务信息**
+
+如`Server: Apache`，可能是服务器名称，可能是名称 + 版本号，也可能是自定义的某个值
+
+- **`Set-Cookie`**
+
+是本次 http 请求中 server 端设置的 cookie 信息。除了 cookie 内容本身之外，还有`expires` `patch` `domain` `Secure`（仅用于 https） `HttpOnly`（JS 不能访问）这些信息。
+
+注意，**设置`domain`可能会造成主域名的 cookie 污染**。如果指定`domain=example.com`时，`sub.example.com`的页面也会有效。
+
+### 实体首部字段
+
+request 和 response 中，实体部分所使用的首部字段。
+
+- **`Content-Encoding`**
+
+如`Content-Encoding: gzip`，实体使用 gzip 压缩。
+
+- **`Content-Length`**
+
+如`Content-Length: 967`，实体部分的大小，单位是 字节 。
+
+- **`Content-Type`**
+
+如`Content-Type: application/x-javascript`，其他信息可参考`Accept`字段。
+
+- **`Expires`**
+
+如`Expires: Thu, 22 Feb 2018 03:03:12 GMT`，即该资源即将失效的时间。
 
 ----
 
@@ -140,7 +239,7 @@ PS：报文内容中，头部内容和主体内容是通过 **空行（CR+LF）*
 
 ## 扩展 & 遗留问题
 
-
+- [MIME 类型列表](http://www.w3school.com.cn/media/media_mimeref.asp)
 
 
 
