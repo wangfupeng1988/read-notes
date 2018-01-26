@@ -13,6 +13,7 @@
 - [《图解 http 》](./book/图解http.md)
 - [《数学之美》](./book/数学之美.md)
 - [《跨终端 web》](./book/跨终端web.md)
+- [《深入浅出 nodejs》](./book/深入浅出nodejs.md)
 
 
 
