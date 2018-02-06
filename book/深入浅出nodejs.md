@@ -230,7 +230,7 @@ res.on('end', function () {
 
 ### 性能
 
-Buffer 处理性能问题，最常见的就是通过 Stream 读取大文件的内容。不过，书中也介绍了在 http 请求中，使用 Buffer 对性能的提升，如下代码：
+Buffer 处理性能问题，最常见的就是通过 Stream 读取大文件的内容。不过，书中也介绍了 **在 http 请求中，使用 Buffer 对性能的提升**，如下代码：
 
 ```js
 var http = require('http')
@@ -277,7 +277,7 @@ cookie 是每次 http 请求都会携带的信息，其本质就是一堆字符�
 
 **`session`**
 
-介绍 session 一般都会使用登录的场景。用户登录了之后，server 端会往 cookie 中添加一个`session_id`的唯一不重复的值（过期时间一般为 20 分钟、并且设置`HttpOnly`），用以跟 server 端进行通讯。此时，server 端为这个`session_id`初始化一个 session 对象。
+介绍 session 一般都会使用登录的场景。用户登录了之后，server 端会往 cookie 中添加一个`session_id`的唯一不重复的值（**过期时间一般为 20 分钟、并且设置`HttpOnly`**），用以跟 server 端进行通讯。此时，server 端为这个`session_id`初始化一个 session 对象。
 
 ```js
 // 全局变量，存储所有用户的 session
@@ -321,7 +321,7 @@ function (req, res) {
 
 ### 数据上传
 
-通过req header 中有没有`Transfer-Encoding`或`Content-Length`可判断是否带有内容。
+通过req header 中，**有没有`Transfer-Encoding`或`Content-Length`可判断是否带有内容**。
 
 ```js
 function hasBody(req) {
@@ -329,7 +329,7 @@ function hasBody(req) {
 }
 ```
 
-报文内容可通过`data`事件触发
+报文内容可通过`data`事件触发（Stream 形式）
 
 ```js
 function (req, res) {
@@ -350,7 +350,7 @@ function (req, res) {
 
 **form**
 
-表单提交时，req header 中`Content-Type`等于`application/x-www-form-urlencoded`
+表单提交时，req header 中 **`Content-Type`等于`application/x-www-form-urlencoded`**
 
 ```js
 function handle(req, res) {
@@ -363,7 +363,7 @@ function handle(req, res) {
 
 **JSON**
 
-即一般的 ajax 请求。书中还介绍了 XML 格式，目前 XML 使用不多，就此略过。JSON 格式时，`Content-Type`等于`application/json`
+即一般的 ajax 请求。书中还介绍了 XML 格式，目前 XML 使用不多，就此略过。JSON 格式时，**`Content-Type`等于`application/json`**
 
 ```js
 function handle(req, res) {
@@ -376,7 +376,7 @@ function handle(req, res) {
 
 **附件上传**
 
-HTML 中普通表单和特殊表单的区别就在于是否有`<file>`标签。如果需要有`<file>`标签，就需要指定表单需求`enctype`为`multipart/form-data`
+HTML 中普通表单和特殊表单的区别就在于是否有`<file>`标签。如果需要有`<file>`标签，就需要指定表单需求 **`enctype`为`multipart/form-data`**
 
 ```html
 <form action="/upload" method="post" enctype="multipart/form-data">
@@ -394,7 +394,7 @@ Content-Length: 18231
 
 其中`AaB03x`是随时字符串，`boundary=AaB03x`是分解符，报文的内容将通过在它前面添加`--`进行分割，报文结束时再它前后都添加`--`表示结束（可参考书中 198 页的例子）。`Content-Length`表示报文主体的长度。
 
-因此，server 端可通过判断`Content-Type`是否是`multipart/form-data`来处理附件上传。书中介绍了用 [formidable](https://www.npmjs.com/package/formidable) 插件来处理，formidable 能接收文件并写入到系统的临时文件夹，使用方式可参考其文档。
+因此，**server 端可通过判断`Content-Type`是否是`multipart/form-data`来处理附件上传**。书中介绍了用 [formidable](https://www.npmjs.com/package/formidable) 插件来处理，formidable 能接收文件并写入到系统的临时文件夹，使用方式可参考其文档。
 
 ### 路由解析
 
@@ -449,7 +449,7 @@ app.use(function (req, res, next) {
 
 nodejs 没有御用的模板引擎，这一点不像 php asp jsp 等，需要自己去选择，例如 artTemplate 。书中也简单讲解了实现一个模板引擎的逻辑，我之前了解过 vue 中模板的解析，因此对这块逻辑也不算陌生。另外，模板解析的逻辑，大概了解即可，也无需详细深入，毕竟是工具性的东西。这里先略过。
 
-接下来书中介绍了 Bigpipe ，需详细记录一下。普通的页面渲染，即便是首屏渲染，也是拿到所有该拿的数据之后，一次性吐出给前端。而 Bigpipe 是将页面内容分成了多个部分（pagelet），然后分批逐步输出。
+接下来书中介绍了 Bigpipe ，需详细记录一下。普通的页面渲染，即便是首屏渲染，也是拿到所有该拿的数据之后，一次性吐出给前端。**而 Bigpipe 是将页面内容分成了多个部分（pagelet），然后分批逐步输出**。
 
 首先，要向前端输出模板和接收 pagelet 的方法，其实就是一个 JS 方法，该方法接收 DOM 选择器和内容，然后将内容渲染到 DOM 节点中。接下来，server 端异步请求数据，然后分批输出到前端去渲染，如下代码。nodejs 异步请求是部分顺序的，因此下面两个异步，哪个先输出不知道——也无需知道，先查询出来的先输出即可。
 
@@ -479,19 +479,135 @@ app.get('/profile', function (req, res) {
 
 ## 第九章 玩转进程
 
+对应 nodejs API 中 [child_process](http://nodejs.cn/api/child_process.html) 和 [cluster](http://nodejs.cn/api/cluster.html) ，开源社区还有 [pm2](https://www.npmjs.com/package/pm2) 工具。
 
+### 事件驱动
+
+**Apache 是采用多线程/多进程模型实现的**，当并发连接数量达到 10k 级别时，内存耗用问题就会暴露出来，这就是著名的 [C10K](http://www.kegel.com/c10k.html) 问题。**而 node 和 Nginx 都是采用事件驱动的方式**，采用单线程避免不必要的内容开销和上下文切换开销。
+
+基于事件驱动主要涉及两个问题：
+
+- **CPU 利用率**。所有处理都是单线程的，影响时间驱动服务模型的根本在于 CPU 的计算能力，因此如何利用多核 CPU ？
+- **进程的健壮性**。PHP 中没有线程的概念，它的健壮性是每次请求都建立独立的上下文（线程），而对于 nodejs 所有请求都是统一的上下文，健壮性必须保证（即能自动修复、容错）。
+
+### 创建子进行
+
+[child_process](http://nodejs.cn/api/child_process.html) 提供了创建子进程的方法
+
+- `spawn`
+- `exec`
+- `execFile`
+- `fork`
+
+```js
+var cp = require('child_process')
+cp.spawn('node', ['worker.js'])
+cp.exec('node worker.js', function (err, stdout, stderr) {
+    // todo
+})
+cp.execFile('worker.js', function (err, stdout, stderr) {
+    // todo
+})
+cp.fork('./worker.js')
+```
+
+进程之间的通讯，代码如下。跟前端`WebWorker`类似，使用`on`监听，使用`send`发送。
+
+```js
+// parent.js
+var cp = require('child_process')
+var n = cp.for('./sub.js')
+n.on('message', function (m) {
+    console.log('PARENT got message: ' + m)
+})
+n.send({hello: 'workd'})
+
+// sub.js
+process.on('message', function (m) {
+    console.log('CHILD got message: ' + m)
+})
+process.send({foo: 'bar'})
+```
+
+### 句柄传递
+
+书中通过一个场景很直接的引出了这个问题，干净利落。即：使用上面的`fork`来启动多个进程监听 http 请求，这样会报监听端口冲突的问题。例如，一旦启动了一个进程监听 8080 端口，再想启动另一个进程监听 8080 端口的话，就会报错。那该如何解决这个问题？
+
+**node 从 v0.5.9 开始引入了进程之间发送句柄的功能**，`child.send(message, [sendHandle])`，后面那个可选的参数就是句柄。句柄可以是一个服务端 socket 对象、一个客户端 socket 对象，一个 UDP 套接字，一个管道等……（其实我没太看懂这里……）。具体的代码示例，可参考书中 243 页。
+
+其实，这个问题通过后面的 Cluster 即可轻松解决。但是 **Cluster 也是借用的这里的句柄传递**，因此也要了解一点原理，虽然不会直接用。
+
+### 稳定的集群
+
+基本就是使用 Cluster ，cluster 模块允许设立一个主进程和若干个 worker 进程，由主进程监控和协调 worker 进程的运行。worker 之间采用进程间通信交换消息，**cluster模块内置一个负载均衡器，采用 Round-robin 算法协调各个 worker 进程之间的负载**。运行时，所有新建立的链接都由主进程完成，然后主进程再把 TCP 连接分配给指定的 worker 进程（即上文的句柄传递）。
+
+```js
+const cluster = require('cluster')
+const os = require('os')
+const http = require('http')
+
+if (cluster.isMaster) {
+    console.log('是主进程')
+    const cpus = os.cpus() // cpu 信息
+    const cpusLength = cpus.length  // cpu 核数
+    for (let i = 0; i < cpusLength; i++) {
+        // fork() 方法用于新建一个 worker 进程，上下文都复制主进程。只有主进程才能调用这个方法
+        // 该方法返回一个 worker 对象。
+        cluster.fork()
+    }
+} else {
+    console.log('不是主进程')
+    // 运行该 demo 之后，可以运行 top 命令看下 node 的进程数量
+    // 如果电脑是 4 核 CPU ，会生成 4 个子进程，另外还有 1 个主进程，一共 5 个 node 进程
+    // 其中， 4 个子进程受理 http-server
+    http.createServer((req, res) => {
+        res.writeHead(200)
+        res.end('hello world')
+    }).listen(8000)  // 注意，这里就不会有端口冲突的问题了！！！
+}
+```
+
+维护进程健壮性，**通过 Cluster 能监听到进程退出，然后自动重启，即自动容错**。
+
+```js
+if (cluster.isMaster) {
+    const num = os.cpus().length
+    console.log('Master cluster setting up ' + num + ' workers...')
+    for (let i = 0; i < num; i++) {
+        // 按照 CPU 核数，创建 N 个子进程
+        cluster.fork()
+    }
+    cluster.on('online', worker => {
+        // 监听 workder 进程上线（启动）
+        console.log('worker ' + worker.process.pid + ' is online')
+    })
+    cluster.on('exit', (worker, code, signal) => {
+        // 兼容 workder 进程退出
+        console.log('worker ' + worker.process.pid + ' exited with code: ' + code + ' and signal: ' + signal)
+        // 退出一个，即可立即重启一个
+        console.log('starting a new workder')
+        cluster.fork()
+    })
+}
+```
+
+示例看似简单，但是实际应用还是尽量使用成熟的工具，例如 [pm2](https://www.npmjs.com/package/pm2)
 
 ----
 
 ## 第十章 测试
 
-
+自动化单元测试，将单独整理，此处略过。
 
 ----
 
 ## 第十一章 产品化
 
+按书中写的内容，我重新总结，应该分位三个层面:
 
+- 流量处理：负载均衡，CDN 等
+- 稳定监控：日志统计、监控内存 CPU、报警邮件等
+- 上线部署：构建、部署、上线
 
 -----
 
@@ -503,12 +619,4 @@ app.get('/profile', function (req, res) {
 - stream-handbook [英文原文](https://github.com/substack/stream-handbook) [中文翻译](https://github.com/jabez128/stream-handbook)
 - [《汇编语言入门 阮一峰》](https://news.cnblogs.com/n/587863/) 
 - nodejs 接收文件上传（并写入系统临时文件夹）[formidable](https://www.npmjs.com/package/formidable)
-
-查：一个没有 UI 的 chrome ，用于单元测试，查一下名字！！！
-
-----
-
-## 总结
-
-
-
+- nodejs 进程守候工具 [pm2](https://www.npmjs.com/package/pm2)
