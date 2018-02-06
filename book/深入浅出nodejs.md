@@ -2,7 +2,7 @@
 
 本书购于 2015.9.30 ，至今快两年半的时间了。购书当时已经看完，但是现在再回头翻看，依然觉得很有收获。因为本书讲解的内容较为底层、原理，并且 nodejs 的基础的 API 一直也没有变过，因此就不过时。正好近期想写一篇关于 nodejs 的系列博客，正好拿本书做参考，重读并做读书笔记。
 
-本书作者是阿里资深工程师仆灵，nodejs 步道师。书中前言部分就提到，作者作为一名 FE 转型成为 nodejs 后端工程师，所具有的优势仅仅是对 JS 语法熟悉而已，但是对后端开发的其他知识并不擅长，需要重新学习。我想这也是我等 FE 对 nodejs 的一个看不透彻的地方，总以为会了 JS 就很容易学会 nodejs 。
+本书作者是阿里资深工程师朴灵，nodejs 步道师。书中前言部分就提到，作者作为一名 FE 转型成为 nodejs 后端工程师，所具有的优势仅仅是对 JS 语法熟悉而已，但是对后端开发的其他知识并不擅长，需要重新学习。我想这也是我等 FE 对 nodejs 的一个看不透彻的地方，总以为会了 JS 就很容易学会 nodejs 。
 
 ----
 
@@ -148,9 +148,348 @@ for (var i = 0; i < 100; i++) {
 
 ## 第五章 内存控制
 
-待续……
+### V8
+
+nodejs 是采用 v8 作为 js 引擎，**但是只能使用部分内存（64 位最多使用 1.4GB ，32 位最多使用 0.7GB）**。原因：
+
+- 表面原因：v8 最初为浏览器设置，即便内存限制，也绝对够用
+- 底层原因：**v8 的垃圾回收机制限制**。内存限制放开，垃圾回收会变慢。具体可见书中 113 页。
+
+nodejs 也开放了修改的接口，可自定义内存限制。在 nodejs 最初运行的时候，可以通过如下方式来修改。一旦修改，运行过程中就不能再次改变了。
+
+- `node --max-old-space-size=1700 test.js` 单位是`MB`
+- `node --max-new-space-size=1400 test.js` 单位是`KB`
+
+接下来，书中详细写 v8 的垃圾回收机制，写的很底层，很复杂，日常工作接触不到，没仔细看。
+
+### 高效使用内存
+
+其实答案很简单 —— **及时释放用不到的变量，复制为`null`或者直接`delete`掉** 。JS 使用闭包时，变量会一直保留在内存中，因此闭包要谨慎使用。
+
+做浏览器的环境的前端开发，不用太过苛刻的关注内存使用，但是做 server 端开发，对内存的关注必须到苛刻、极致。这是一种开发思想上的转变，也是最难的。
+
+### 内存泄露
+
+如果 **缓存过多、队列消费不及时、作用域未释放** ，都会导致内存泄露，书中讲了许多例子。其中重点提到，数据量过大的缓存不应该直接使用 nodejs 变量，而是应该使用专业的分布式缓存工具，例如`redis` `memcached`
+
+### 大内存应用
+
+使用 stream 读取大文件
+
+-----
+
+## 第六章 理解 Buffer
+
+### 介绍
+
+Buffer 是典型的 JS 和 C++ 结合的模块，将性能部分用 C++ 实现，非性能部分用 JS 实现。**Buffer 所占用的内存不是 V8 分配的，属于堆外内存**（何为“堆外内存”可参考 [《汇编语言入门 阮一峰》](https://news.cnblogs.com/n/587863/) ）
+
+Buffer 对象类似于数组，每个元素都是一个 16 进制的两位数（换算成 10 进制即 0-255 之间的数字）。
+
+```js
+var str = '深入浅出nodejs'
+var buf = new Buffer(str, 'utf-8')
+console.log(buf)  // <Buffer e6 b7 b1 e5 85 a5 e6 b5 85 e5 87 ba 6e 6f 64 65 6a 73>
+```
+
+上面的示例，中文文字采用`utf-8`编码下占用 3 个元素，英文占用 1 个元素。即：`深`对应`e6 b7 b1`，`如`对应`e5 85 a5`……
+
+**Buffer 和字符串本质就不一样，Buffer 是二进制数据，和字符串之间存在编码关系。**
+
+### 拼接
+
+在许多 nodejs 的示例中，往往这样拼接 buffer
+
+```js
+var fs = require('fs')
+var rs = fs.createReadStream('test.log')
+var data = ''
+rs.on('data', function (chunk) {  // chunk 是 Buffer 对象
+    data += chunk  // 拼接 buffer
+})
+rs.on('end', function () {
+    console.log(data)
+})
+```
+
+其实这样拼接在中文字符串情况下会有问题。上面提到过，中文文字采用`utf-8`编码下占用 3 个元素，通过 stream 方式读取内存，很有可能一段 chunk 中，将一个中文（占 3 个元素）截断，这样就会先乱码。因此，正确的拼接方式如下：
+
+```js
+var chunks = []
+var size = 0
+res.on('data', function (chunk) {  // chunk 是 Buffer 对象
+    chunks.push(chunk)
+    size += chunk.length
+})
+res.on('end', function () {
+    var buf = Buffer.concat(chunks, size)  // 拼接 buffer
+    var str = iconv.decode(buf, 'utf-8')
+    console.log(str)
+})
+```
+
+### 性能
+
+Buffer 处理性能问题，最常见的就是通过 Stream 读取大文件的内容。不过，书中也介绍了在 http 请求中，使用 Buffer 对性能的提升，如下代码：
+
+```js
+var http = require('http')
+// 模拟一个字符串
+var helloWorld = ''
+for (var i = 0; i < 1024 * 10; i++) {
+    helloWorld += 'a'
+}
+
+// helloWorld = new Buffer(helloWorld)  // 加上这一句代码，将对性能有极大提升（QPS 从 2.5k 到 4.8k）！！！
+
+http.createServer(function (req, res) {
+    res.writeHead(200)
+    res.end(helloWorld)
+}).listen(8080)
+```
+
+通过预先将返回内容转换为 Buffer 对象，可以有效介绍 CPU 的重复使用，不做额外的转换，提高性能。
+
+----
+
+## 第八章 构建 web 应用
+
+第七章 讲述了 nodejs 网络编程的概述，网络编程不只有 http 协议。但是，我们工作常用的基本都是 http 协议，于是直接关注本章 —— web 应用。本章用到的 http 协议的知识，可参考[《图解 http》读书笔记](./图解http.md).
+
+### 基本应用 
+
+该部分，书中花了很大的篇幅讲解 cookie 和 session ，我也觉得这两块是最重要的。
+
+**`cookie`**
+
+cookie 是每次 http 请求都会携带的信息，其本质就是一堆字符串。前后端都可以对 cookie 进行设置，后端设置的几个选项。可通过`Set-Cookie`进行修改，即`res.setHeader('Set-Cookie', 'xxxx')`
+
+- `path`
+- `Expires`
+- `HttpOnly` （是否允许前端 JS 修改 cookie 项）
+- `Secure` （仅允许 https 协议）
+
+对于 cookie 有两点需要注意：
+
+- 网页中发起跨域的 http 请求（ajax、加载静态资源）时候，不会携带 cookie ，这是浏览器的同源策略保证的
+- **但是要注意命中 CSRF (跨站请求伪造)的情况**：浏览器已经访问过`a.com`的请求（访问时肯定带了 cookie），此时黑客在`b.com`中诱导用户访问`a.com`的请求，同样会携带此前访问`a.com`的 cookie 。**注意，同源策略限制的是`b.com`中访问`a.com`请求时，不携带`b.com`的 cookie ，但是会正常携带`a.com`的 cookie** 。
 
 
+**`session`**
+
+介绍 session 一般都会使用登录的场景。用户登录了之后，server 端会往 cookie 中添加一个`session_id`的唯一不重复的值（过期时间一般为 20 分钟、并且设置`HttpOnly`），用以跟 server 端进行通讯。此时，server 端为这个`session_id`初始化一个 session 对象。
+
+```js
+// 全局变量，存储所有用户的 session
+var SESSIONLIST = {}
+
+// 处理请求的中间件
+function (req, res) {
+    // 处理请求时，创建一个 session （刚刚登录时，创建 session）
+    var session_id = Date.now() + Math.random()
+    SESSIONLIST[session_id] = {}
+    var session = SESSIONLIST[session_id]
+
+    // 可以挂在到 req 上
+    req.session = session
+    req.session.visited = true
+
+    // Set-Cookie，设置 session_id，过期时间 20 分钟，HttpOnly
+}
+```
+
+此后发送的请求， server 端都会检查 cookie 中是否有`session_id`，如果没有了（或者不合法）则证明身份失效。如果有合法的`session_id`，那证明身份合法，可以使用`session`中的信息。
+
+```js
+// 处理请求的中间件
+function (req, res) {
+    // 试图获取 cookie 中的 session_id ，看是否不存在或者非法
+    // 如果存在且合法的话：
+    req.session = SESSIONLIST[session_id]
+    console.log(req.session.visited)
+}
+```
+
+这样，将用户的敏感信息存储到 session 要比存储到 cookie 安全的多。
+
+如上代码，将所有用户的 session 信息全部存储到内存中，会带来一些问题：
+
+- 用户过多，会导致内存不够使用
+- 启动多进程（cluster 集群等），内存无法共享
+
+这个问题的解决方案 —— 将 session 存储到第三方缓存服务中（如 Redis Memcached 等）。虽然这样还要考虑网络访问的性能问题，但是总有一些解决方案，比命中上述两个问题要好多了。
+
+### 数据上传
+
+通过req header 中有没有`Transfer-Encoding`或`Content-Length`可判断是否带有内容。
+
+```js
+function hasBody(req) {
+    return 'transfer-encoding' in req.headers || 'content-length' in req.headers
+}
+```
+
+报文内容可通过`data`事件触发
+
+```js
+function (req, res) {
+    if (hasBody(req)) {
+        var buffers = []
+        req.on('data', function (chunk) {
+            buffers.push(chunk)
+        })
+        req.on('end', function (chunk) {
+            req.rawBoby = Buffer.concat(buffers).toString()
+            handle(req, res)
+        })
+    } else {
+        handle(req, res)
+    }
+}
+```
+
+**form**
+
+表单提交时，req header 中`Content-Type`等于`application/x-www-form-urlencoded`
+
+```js
+function handle(req, res) {
+    if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
+        req.body = queryString.parse(req.rawBody)
+    }
+    todo(req, res)
+}
+```
+
+**JSON**
+
+即一般的 ajax 请求。书中还介绍了 XML 格式，目前 XML 使用不多，就此略过。JSON 格式时，`Content-Type`等于`application/json`
+
+```js
+function handle(req, res) {
+    if (req.headers['content-type'] === 'application/json') {
+        req.body = JSON.parse(req.rawBody)  // 此处应 try-catch 格式错误的情况
+    }
+    todo(req, res)
+}
+```
+
+**附件上传**
+
+HTML 中普通表单和特殊表单的区别就在于是否有`<file>`标签。如果需要有`<file>`标签，就需要指定表单需求`enctype`为`multipart/form-data`
+
+```html
+<form action="/upload" method="post" enctype="multipart/form-data">
+    <input ... >
+    <file ... >
+</form>
+```
+
+浏览器遇到这样的表单提交时，构造的报文头部就和普通表单不同了
+
+```
+Content-Type: multipart/form-data; boundary=AaB03x
+Content-Length: 18231
+```
+
+其中`AaB03x`是随时字符串，`boundary=AaB03x`是分解符，报文的内容将通过在它前面添加`--`进行分割，报文结束时再它前后都添加`--`表示结束（可参考书中 198 页的例子）。`Content-Length`表示报文主体的长度。
+
+因此，server 端可通过判断`Content-Type`是否是`multipart/form-data`来处理附件上传。书中介绍了用 [formidable](https://www.npmjs.com/package/formidable) 插件来处理，formidable 能接收文件并写入到系统的临时文件夹，使用方式可参考其文档。
+
+### 路由解析
+
+路由解析是一个 web server 基本功能，nodejs 提供了 [url](http://nodejs.cn/api/url.html) 和 [querystring](http://nodejs.cn/api/querystring.html) 两个 API 来处理路由。常用的框架 express 和 koa 也都有很方便的路由处理接口，而且是基本功能。基本的处理逻辑比较简单，就此略过。
+
+书中还提到了 RESTful API ，这个值得记录一下。其实 **RESTful 的思路就是：将每个 url 地址都抽象为一个资源，通过 method 来规定具体的操作**。我觉得这一点和 linux 中将一切输入输出都作为文件一样，是一种规范性的抽象。例如，普通的 API 设计如下：
+
+```
+POST /user/add?username=jack
+GET  /user/remove?username=jack
+POST /user/update?username=jack
+GET  /user/get?username=jack
+```
+
+上面这种方式，就讲操作行为混合在了 url 中，无法做到每个 url 都对应一个资源。使用 RESTful API 将会这样设计：
+
+```
+POST   /user/jack
+DELETE /user/jack
+PUT    /user/jack
+GET    /user/jack
+```
+
+书中总结了 RESTful 的三个特点：
+
+- 通过 url 设计资源
+- method 定义资源的操作
+- 通过`Accept`决定资源的类型
+
+### 中间件
+
+体验中间件的最好方式就是立马做一个 express 和 koa 的例子，代码格式如
+
+```js
+app.use(function (req, res, next) {
+    todo(req, res)
+    next()
+})
+```
+
+中间件用于将业务逻辑细分，以符合单一职责原则和开放封闭原则。中间件可分为通用的和业务的两种，其中通用的是每个业务都需要的，例如：
+
+- logger
+- body 处理
+- querystring 处理
+- cookie  session 处理
+- ……
+
+如果是完全同步的代码，中间件用起来是很顺畅的，但是 server 端处理请求基本都会有异步 IO 的情况，因此如何在中间件中使用异步，是一个重要问题。其中，express 是使用比较传统的 callback 方式，koa 1.x 使用了 ES6 的 Generator 特性，而在如今的 koa 2.x 又升级使用了 ES7 草案的 `async/await` 特性，算是终极的解决方案了。
+
+### 页面渲染
+
+nodejs 没有御用的模板引擎，这一点不像 php asp jsp 等，需要自己去选择，例如 artTemplate 。书中也简单讲解了实现一个模板引擎的逻辑，我之前了解过 vue 中模板的解析，因此对这块逻辑也不算陌生。另外，模板解析的逻辑，大概了解即可，也无需详细深入，毕竟是工具性的东西。这里先略过。
+
+接下来书中介绍了 Bigpipe ，需详细记录一下。普通的页面渲染，即便是首屏渲染，也是拿到所有该拿的数据之后，一次性吐出给前端。而 Bigpipe 是将页面内容分成了多个部分（pagelet），然后分批逐步输出。
+
+首先，要向前端输出模板和接收 pagelet 的方法，其实就是一个 JS 方法，该方法接收 DOM 选择器和内容，然后将内容渲染到 DOM 节点中。接下来，server 端异步请求数据，然后分批输出到前端去渲染，如下代码。nodejs 异步请求是部分顺序的，因此下面两个异步，哪个先输出不知道——也无需知道，先查询出来的先输出即可。
+
+```js
+app.get('/profile', function (req, res) {
+    var num = 0
+    db.getData('sql1', function (err, data) {
+        res.write('<script>bigpipe.set("articles", "' + JSON.stringify(data) + '")</script>')
+        num++
+        if (num === 2) {
+            res.end()
+        }
+    })
+    db.getData('sql2', function (err, data) {
+        res.write('<script>bigpipe.set("copyright", "' + JSON.stringify(data) + '")</script>')
+        num++
+        if (num === 2) {
+            res.end()
+        }
+    })
+})
+```
+
+这种多 pagelet 分批下发的方式，ajax 也可以办到。但是 ajax 每次都是一个独立的 http 请求，而 Bigpipe 共用相同的请求，开销十分小。
+
+----
+
+## 第九章 玩转进程
+
+
+
+----
+
+## 第十章 测试
+
+
+
+----
+
+## 第十一章 产品化
 
 
 
@@ -160,5 +499,16 @@ for (var i = 0; i < 100; i++) {
 
 - linux 标准输入输出
 - 异步流程控制库 [async](https://github.com/caolan/async) 和 [step](https://www.npmjs.com/package/step)
-- 异步定法控制的过载保护 [bagpipe](https://www.npmjs.com/package/bagpipe) （本书作者提供）
+- 异步并发控制的过载保护 [bagpipe](https://www.npmjs.com/package/bagpipe) （本书作者提供）
+- stream-handbook [英文原文](https://github.com/substack/stream-handbook) [中文翻译](https://github.com/jabez128/stream-handbook)
+- [《汇编语言入门 阮一峰》](https://news.cnblogs.com/n/587863/) 
+- nodejs 接收文件上传（并写入系统临时文件夹）[formidable](https://www.npmjs.com/package/formidable)
+
+查：一个没有 UI 的 chrome ，用于单元测试，查一下名字！！！
+
+----
+
+## 总结
+
+
 
