@@ -15,7 +15,7 @@
 - [《跨终端 web》](./book/跨终端web.md)
 - [《深入浅出 nodejs》](./book/深入浅出nodejs.md)
 - [《Linux/Unix设计思想》](./book/Linux-Unix设计思想.md)
-- [《松本行弘的程序世界》](./book/松本行弘的程序世界.md) （待写）
+- [《松本行弘的程序世界》](./book/松本行弘的程序世界.md)
 - [《CSS 设计指南》](./book/CSS设计指南.md) （待写）
 
 ## 视频
