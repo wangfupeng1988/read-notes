@@ -6,7 +6,7 @@
 
 看书不能以看完了为目的，如果看完了书之后提笔一字写不出，那基本等于没看。
 
-## 目录
+## 读书
 
 - [《前端工程化体系设计和实践》](./book/前端工程化体系设计和实践.md)
 - [《第三方 javascipt 编程》](./book/第三方javascript编程.md)
@@ -18,4 +18,19 @@
 - [《松本行弘的程序世界》](./book/松本行弘的程序世界.md) （待写）
 - [《CSS 设计指南》](./book/CSS设计指南.md) （待写）
 
+## 视频
+
+- when iOS love JS
+- React Native 入门
+- weex 入门
+- webview
+
+## 关于作者
+
+- 关注作者的博客 - 《[深入理解javascript原型和闭包系列](http://www.cnblogs.com/wangfupeng1988/p/4001284.html)》《[深入理解javascript异步系列](https://github.com/wangfupeng1988/js-async-tutorial)》《[换个思路学习nodejs](https://github.com/wangfupeng1988/node-tutorial)》《[CSS知多少](http://www.cnblogs.com/wangfupeng1988/p/4325007.html)》 
+- 学习作者的教程 - 《[前端JS高级面试](https://coding.imooc.com/class/190.html)》《[前端JS基础面试题](http://coding.imooc.com/class/115.html)》《[React.js模拟大众点评webapp](http://coding.imooc.com/class/99.html)》《[zepto设计与源码分析](http://www.imooc.com/learn/745)》《[json2.js源码解读](http://study.163.com/course/courseMain.htm?courseId=691008)》
+
+如果你感觉有收获，欢迎给我打赏 ———— 以激励我更多输出优质开源内容
+
+![图片](https://camo.githubusercontent.com/e1558b631931e0a1606c769a61f48770cc0ccb56/687474703a2f2f696d61676573323031352e636e626c6f67732e636f6d2f626c6f672f3133383031322f3230313730322f3133383031322d32303137303232383131323233373739382d313530373139363634332e706e67)
 

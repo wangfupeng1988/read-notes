@@ -84,3 +84,4 @@ ios 只有一种常用方式：
 - 《viewport 双城记》 [part one](https://www.quirksmode.org/mobile/viewports.html), [part two](https://www.quirksmode.org/mobile/viewports2.html), [中文翻译](http://ju.outofmemory.cn/entry/73169)
 - hybrid 框架 [PhoneGap](https://github.com/sintaxi/phonegap) 和 [ionic](https://ionicframework.com/)
 - 慕课网视频教程 [hybrid 设计](https://www.imooc.com/learn/850) 
+- 慕课网视频教程 [When iOS loves JS](https://www.imooc.com/learn/92)

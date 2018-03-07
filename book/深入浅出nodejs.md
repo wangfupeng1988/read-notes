@@ -492,7 +492,7 @@ app.get('/profile', function (req, res) {
 
 另外，**考虑 nodejs 的特殊情况（只能使用部分内存，64 位最多使用 1.4GB ，32 位最多使用 0.7GB），开启多进程还可充分利用内存**。因为每个进程都是一个单独的 v8 实例，会重新分配内存，和其他进程不冲突。
 
-### 创建子进行
+### 创建子进程
 
 [child_process](http://nodejs.cn/api/child_process.html) 提供了创建子进程的方法
 
