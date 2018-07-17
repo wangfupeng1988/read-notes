@@ -17,9 +17,14 @@
 - [《Linux/Unix设计思想》](./book/Linux-Unix设计思想.md)
 - [《松本行弘的程序世界》](./book/松本行弘的程序世界.md)
 - [《CSS 设计指南》](./book/CSS设计指南.md) （待写）
+- [《vimtutor教程》](./book/vimtutor教程.md)
+- [《screen常用命令》](./book/linux-screen常用命令.md)
 
 ## 视频
 
+- [与mysql零距离接触](./video/与mysql零距离接触.md)
+- [redis入门](./video/redis入门.md)
+- [docker入门](./video/docker入门.md)
 - when iOS love JS
 - React Native 入门
 - weex 入门
