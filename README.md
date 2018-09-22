@@ -19,9 +19,11 @@
 - [《CSS 设计指南》](./book/CSS设计指南.md) （待写）
 - [《vimtutor教程》](./book/vimtutor教程.md)
 - [《screen常用命令》](./book/linux-screen常用命令.md)
+- [《CSS世界》](./book/css世界.md)
 
 ## 视频
 
+- [计算机组成](./video/计算机组成.md)
 - [与mysql零距离接触](./video/与mysql零距离接触.md)
 - [redis入门](./video/redis入门.md)
 - [docker入门](./video/docker入门.md)
