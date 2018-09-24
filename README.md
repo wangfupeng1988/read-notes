@@ -23,6 +23,7 @@
 
 ## 视频
 
+- [汇编语言](./video/汇编语言.md)
 - [计算机组成](./video/计算机组成.md)
 - [与mysql零距离接触](./video/与mysql零距离接触.md)
 - [redis入门](./video/redis入门.md)
